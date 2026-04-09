@@ -13,13 +13,13 @@ export class MemberService {
   
   public async signup(input: MemberInput): Promise<Member> {
     //TODO: HASH PASSWORD
-    try {
+    try { 
         const result = this.memberModel.create(input);
         //TODO: AUTHENTICATION VIA TOKEN
         return result;
     } catch (err) {
-        console.log('Error, Service.model', err);
-        throw new BadRequestException(err);
+        console.log('Error, Service.model', err.message);
+        throw new BadRequestException(Message.USED_MEMBER_NICK_OR_PHONE);
     }
    
   }
