@@ -31,7 +31,8 @@ return GraphQLformattedError;
    }
   }), 
 
-  ComponentsModule, DatabaseModule
+  ComponentsModule,
+   DatabaseModule
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],
