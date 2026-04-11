@@ -8,6 +8,8 @@ import { Member } from '../../libs/dto/member/member';
 export class MemberResolver {
     constructor(private readonly memberService: MemberService) {}
 
+
+//=============================================================
 @Mutation(() => Member)
 public async signup(@Args('input') input: MemberInput): Promise<Member> {
   console.log('Mutation: signup');
@@ -15,6 +17,8 @@ public async signup(@Args('input') input: MemberInput): Promise<Member> {
  
 }
 
+
+//==============================================================
 @Mutation(() => Member)
 public async login(@Args('input') input: LoginInput): Promise<Member> {
  console.log('Mutation: login');
@@ -22,12 +26,16 @@ public async login(@Args('input') input: LoginInput): Promise<Member> {
 
 }
 
+//================================================================
+
 @Mutation(() => String)
 public async updateMember():Promise<string> {
     console.log('Mutation: updateMember');
     return this.memberService.updateMember();
 }
 
+
+//=================================================================
 @Mutation(() => String)
 public async getMember():Promise<string> {
     console.log('Mutation: getMember');

@@ -7,7 +7,6 @@ import { ApolloDriver } from "@nestjs/apollo";
 import { AppResolver } from './app.resolver';
 import { ComponentsModule } from './components/components.module';
 import { DatabaseModule } from './database/database.module';
-import { MESSAGES } from '@nestjs/core/constants';
 import { T } from './libs/common';
 
 
@@ -26,7 +25,7 @@ import { T } from './libs/common';
       message:
       error?.extensions?.exception?.response?.message || error?.extensions?.response?.message || error?.message,
     }; 
-  console.log('GRAPHQL GLOBAL ERR:' , GraphQLformattedError);
+    console.log('GRAPHQL GLOBAL ERR:' , GraphQLformattedError);
 return GraphQLformattedError;
    }
   }), 
