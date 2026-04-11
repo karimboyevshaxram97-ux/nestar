@@ -19,14 +19,14 @@ export class MemberService {
   public async signup(input: MemberInput): Promise<Member> {
     input.memberPassword = await this.authService.hashPassword(input.memberPassword);
     try { 
-        const result = this.memberModel.create(input);
-
+        const result = await this.memberModel.create(input);
+       result.accsessToken =  await this.authService.createToken( result);
         return result;
     } catch (err) {
         console.log('Error, Service.model', err.message);
         throw new BadRequestException(Message.USED_MEMBER_NICK_OR_PHONE);
     }
-   
+     
   }
 
 //=======================================================================
@@ -47,6 +47,7 @@ export class MemberService {
   // TODO: Compare passwords
   const isMatch = await this.authService.comparePasswords(input.memberPassword, response.memberPassword);
   if (!isMatch) throw new InternalServerErrorException(Message.WRONG_PASSWORD);
+  response.accsessToken = await this.authService.createToken(response);
 
   return response;
 }
@@ -57,7 +58,7 @@ export class MemberService {
     return 'updateMember executed!';
   }
 
-  
+
 //===================================================================
   public async getMember(): Promise<string> {
     return 'getMember executed!';
