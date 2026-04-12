@@ -6,6 +6,8 @@ import { Member } from '../../libs/dto/member/member';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import * as mongoose from 'mongoose';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { MemberType } from '../../libs/enums/member.enum';
 
 @Resolver()
 export class MemberResolver {
@@ -59,6 +61,8 @@ public async getMember():Promise<string> {
 /** ADMIN **/
 
 // Authorization: ADMIN
+@Roles(MemberType.ADMIN)
+@UseGuards(RolesGuard)
 @Mutation(() => String)
 public async getAllMembersByAdmin(): Promise<string> {
   return this.memberService.getAllMembersByAdmin();
@@ -73,5 +77,9 @@ public async updateMemberByAdmin(): Promise<string> {
 }
 
 
+}
+
+function Roles(ADMIN: MemberType): (target: MemberResolver, propertyKey: "getAllMembersByAdmin", descriptor: TypedPropertyDescriptor<() => Promise<string>>) => void | TypedPropertyDescriptor<...> {
+    throw new Error('Function not implemented.');
 }
 
