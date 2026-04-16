@@ -147,7 +147,7 @@ return url;
 }
 
 @UseGuards(AuthGuard)
-@Mutation((returns) => [String])
+@Mutation(() => [String], { nullable: true }) ////////////////////////////////////////////////////////////////////
 public async imagesUploader(
 	@Args('files', { type: () => [GraphQLUpload] })
 files: Promise<FileUpload>[],
@@ -182,7 +182,7 @@ files: Promise<FileUpload>[],
 	});
 
 	await Promise.all(promisedList);
-	return uploadedImages;
+	return uploadedImages.filter((img) => img !== null);
 }
 
 

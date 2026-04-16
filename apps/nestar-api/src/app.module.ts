@@ -7,7 +7,7 @@ import { ApolloDriver } from "@nestjs/apollo";
 import { AppResolver } from './app.resolver';
 import { ComponentsModule } from './components/components.module';
 import { DatabaseModule } from './database/database.module';
-import { T } from './libs/common';
+import { T } from './libs/types/common';
 
 
 @Module({
