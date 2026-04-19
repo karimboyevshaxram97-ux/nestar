@@ -3,8 +3,8 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import * as mongoose from 'mongoose';
 import { PropertyService } from './property.service';
-import { PropertyInput } from '../../libs/dto/property/property.input';
-import { Property } from '../../libs/dto/property/property';
+import { PropertiesInquiry, PropertyInput } from '../../libs/dto/property/property.input';
+import { Properties, Property } from '../../libs/dto/property/property';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { MemberType } from '../../libs/enums/member.enum';
@@ -53,6 +53,16 @@ public async updateProperty(
   input._id = shapeIntoMongoObjectId(input._id);
   return await this.propertyService.updateProperty(memberId, input);
 }
+//==================================================================
+@UseGuards(WithoutGuard)
+@Query(() => Properties)
+public async getProperties(
+  @Args('input') input: PropertiesInquiry,
+  @AuthMember('_id') memberId: mongoose.ObjectId,
+): Promise<Properties > {
+  console.log('Query: getProperties');
+  return await this.propertyService.getProperties(memberId, input);
+}
 
-
+ 
 }
