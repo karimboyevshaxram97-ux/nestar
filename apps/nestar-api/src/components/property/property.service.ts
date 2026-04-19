@@ -281,4 +281,13 @@ public async getAllPropertiesByAdmin(input: AllPropertiesInquiry): Promise<Prope
   return result;
 }
 
+//==============================================================
+public async removePropertyByAdmin(propertyId: ObjectId): Promise<Property> {
+  const search: T = { _id: propertyId, propertyStatus: PropertyStatus.DELETE };
+  const result = await this.propertyModel.findOneAndDelete(search).exec();
+  if (!result) throw new InternalServerErrorException(Message.REMOVE_FAILED);
+
+  return result;
+}
+
 }
