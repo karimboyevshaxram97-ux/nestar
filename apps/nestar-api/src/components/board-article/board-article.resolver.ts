@@ -5,10 +5,13 @@ import { AuthMember } from '../auth/decorators/authMember.decorator';        // 
 import { WithoutGuard } from '../auth/guards/without.guard';                 // Login bo'lmagan ham kira oladi
 import { BoardArticleService } from './board-article.service';               // Business logic service
 import { BoardArticleUpdate } from '../../libs/dto/board-article/board-article.update'; // Yangilash DTO si
-import { BoardArticleInput, BoardArticlesInquiry } from '../../libs/dto/board-article/board-article.input'; // Yaratish va ro'yxat DTO lari
+import { AllBoardArticlesInquiry, BoardArticleInput, BoardArticlesInquiry } from '../../libs/dto/board-article/board-article.input'; // Yaratish va ro'yxat DTO lari
 import { BoardArticle, BoardArticles } from '../../libs/dto/board-article/board-article'; // Response DTO lari
 import { shapeIntoMongoObjectId } from '../../libs/config';                  // String → ObjectId converter
 import * as mongoose from 'mongoose';                                         // MongoDB ObjectId tipi
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { MemberType } from '../../libs/enums/member.enum';
 
 @Resolver()                                                                  // Bu class GraphQL Resolver ekanligini bildiradi
 export class BoardArticleResolver {
@@ -60,5 +63,47 @@ public async getBoardArticles(
   console.log('Query: getBoardArticles');                                       // Debug log
   return await this.boardArticleService.getBoardArticles(memberId, input);      // Service ga uzatadi
 }
+ //==================================================================
 
+/* AMIN */
+@Roles(MemberType.ADMIN)                                                        // Faqat ADMIN kira oladi
+@UseGuards(RolesGuard)                                                          // Role tekshiruvchi Guard
+@Query((returns) => BoardArticles)                                              // GraphQL Query, ro'yxat qaytaradi
+public async getAllBoardArticlesByAdmin(
+  @Args('input') input: AllBoardArticlesInquiry,                                // Admin uchun keng filter parametrlari
+  @AuthMember('_id') memberId: mongoose.ObjectId,                                        // Admin ning ID si (logda ishlatilishi mumkin)
+): Promise<BoardArticles> {                                                     // { list: BoardArticle[], metaCounter: [{total}] }
+  console.log('Query: getAllBoardArticlesByAdmin');                             // Debug log
+  return await this.boardArticleService.getAllBoardArticlesByAdmin(input);      // ⚠️ memberId uzatilmaydi — Admin hamma maqolani ko'radi
 }
+
+
+//================================6==================================
+
+@Roles(MemberType.ADMIN)                                                        // Faqat ADMIN kira oladi
+@UseGuards(RolesGuard)                                                          // ⚠️ Rasmda ko'rinmaydi, lekin bo'lishi shart!
+@Mutation(() => BoardArticle)                                                   // GraphQL Mutation, BoardArticle qaytaradi
+public async updateBoardArticleByAdmin(
+  @Args('input') input: BoardArticleUpdate,                                     // Yangilash ma'lumotlari
+  @AuthMember('_id') memberId: mongoose.ObjectId,                                        // Admin ning ID si (logda ishlatilishi mumkin)
+): Promise<BoardArticle> {
+  console.log('Mutation: updateBoardArticleByAdmin');                          // Debug log
+  input._id = shapeIntoMongoObjectId(input._id);                               // input._id String → MongoDB ObjectId ga o'giradi
+  return await this.boardArticleService.updateBoardArticleByAdmin(input);      // ⚠️ memberId uzatilmaydi — Admin istalgan maqolani yangilay oladi
+}
+
+//=================================7==================================
+
+@Roles(MemberType.ADMIN)                                                        // Faqat ADMIN kira oladi
+@UseGuards(RolesGuard)                                                          // Role tekshiruvchi Guard
+@Mutation((returns) => BoardArticle)                                            // GraphQL Mutation, o'chirilgan BoardArticle qaytaradi
+public async removeBoardArticleByAdmin(
+  @Args('articleId') input: string,                                             // O'chiriladigan maqola ID si (string)
+  @AuthMember('_id') memberId: mongoose.ObjectId,                                        // Admin ning ID si
+): Promise<BoardArticle> {
+  console.log('Mutation: removeBoardArticleByAdmin');                          // Debug log
+  const articleId = shapeIntoMongoObjectId(input);                             // String → MongoDB ObjectId ga o'giradi
+  return await this.boardArticleService.removeBoardArticleByAdmin(articleId);  // ⚠️ memberId uzatilmaydi — Admin istalgan maqolani o'chira oladi
+}
+
+} 

@@ -4,7 +4,7 @@ import { Model, ObjectId } from 'mongoose';                                     
 import { BoardArticle, BoardArticles } from '../../libs/dto/board-article/board-article';        // Response DTO lari (bitta va ro'yxat)
 import { MemberService } from '../member/member.service';                                         // Member statistikasi uchun
 import { ViewService } from '../view/view.service';                                               // Ko'rishlarni qayd etish uchun
-import { BoardArticleInput, BoardArticlesInquiry } from '../../libs/dto/board-article/board-article.input'; // Input DTO lari
+import { AllBoardArticlesInquiry, BoardArticleInput, BoardArticlesInquiry } from '../../libs/dto/board-article/board-article.input'; // Input DTO lari
 import { Direction, Message } from '../../libs/enums/common.enum';                               // Saralash va xabar enumlari
 import { BoardArticleStatus } from '../../libs/enums/board-article.enum';                        // ACTIVE, DELETE enumlari
 import { ViewGroup } from '../../libs/enums/view.enum';                                           // Ko'rish guruhi (BOARD_ARTICLE...)
@@ -128,8 +128,77 @@ public async updateBoardArticle(memberId: ObjectId, input: BoardArticleUpdate): 
   return result[0];                                                                               // { list: BoardArticle[], metaCounter: [{total: n}] }
 }
 
-//=========================5================2 ga tegishli logic=========
+//=========================5===ADMIN=======================================
+public async getAllBoardArticlesByAdmin(input: AllBoardArticlesInquiry): Promise<BoardArticles> { // Admin barcha maqolalarni olish metodi
+  const { articleStatus, articleCategory } = input.search;                                       // Filter parametrlarini ajratib oladi
+  const match: T = {};                                                                            // ⚠️ Bo'sh match — Admin barcha statusdagi maqolalarni ko'radi
+  const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };          // Sort (default: yangi → eski)
 
+  if (articleStatus) match.articleStatus = articleStatus;                                        // Status berilsa filterlaydi, berilmasa — barchasi
+  if (articleCategory) match.articleCategory = articleCategory;                                  // Kategoriya berilsa filterlaydi, berilmasa — barchasi
+
+  const result = await this.boardArticleModel
+    .aggregate([
+      { $match: match },                                                                          // 1: Filterlaydi
+      { $sort: sort },                                                                            // 2: Saralaydi
+      {
+        $facet: {                                                                                  // 3: Parallel 2 ta hisoblash
+          list: [
+            { $skip: (input.page - 1) * input.limit },                                           // Pagination: sahifani hisoblaydi
+            { $limit: input.limit },                                                              // Nechta qaytarishni cheklaydi
+            lookupMember,                                                                         // Egasining ma'lumotlarini JOIN qiladi
+            { $unwind: '$memberData' },                                                           // memberData array → oddiy object
+          ],
+          metaCounter: [{ $count: 'total' }],                                                     // Jami mos keluvchi hujjatlar soni
+        },
+      },
+    ])
+    .exec();                                                                                      // Promise qaytaradi
+  if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);             // Natija bo'sh bo'lsa 500 xatosi
+
+  return result[0];                                                                               // { list: BoardArticle[], metaCounter: [{total: n}] }
+}
+
+  //=======================6===========================================
+
+  public async updateBoardArticleByAdmin(input: BoardArticleUpdate): Promise<BoardArticle> { // Admin maqolani yangilash metodi
+  const { _id, articleStatus } = input;                                                    // ID va yangi statusni ajratib oladi
+
+  const result = await this.boardArticleModel
+    .findOneAndUpdate(
+      { _id: _id, articleStatus: BoardArticleStatus.ACTIVE },                             // Faqat ACTIVE maqolani topadi
+                                                                                           // ⚠️ memberId yo'q — Admin istalgan maqolani yangilay oladi
+      input,                                                                               // Yangi ma'lumotlar bilan yangilaydi
+      { new: true },                                                                       // Yangilangan hujjatni qaytaradi
+    )
+    .exec();                                                                               // Promise qaytaradi
+  if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);             // Topilmasa 500 xatosi
+
+  if (articleStatus === BoardArticleStatus.DELETE) {                                      // Agar maqola o'chirilgan bo'lsa
+    await this.memberService.memberStatsEditor({
+      _id: result.memberId,                                                                // ⚠️ result.memberId — Admin ning emas, maqola egasining ID si
+      targetKey: 'memberArticles',                                                         // memberArticles maydonini o'zgartiradi
+      modifier: -1,                                                                        // -1 kamayadi (maqolalar soni kamaydi)
+    });
+  }
+
+  return result;                                                                           // Yangilangan maqolani qaytaradi
+}
+
+//==========================7=====================================
+ public async removeBoardArticleByAdmin(articleId: ObjectId): Promise<BoardArticle> { // Admin maqolani DBdan butunlay o'chirish metodi
+  const search: T = {
+    _id: articleId,                                                                   // O'chiriladigan maqola ID si
+    articleStatus: BoardArticleStatus.DELETE,                                         // ⚠️ Faqat DELETE statusdagi maqolani o'chiradi
+  };                                                                                  // Avval status DELETE ga o'zgartirilishi shart!
+  const result = await this.boardArticleModel.findOneAndDelete(search).exec();        // Topib DBdan butunlay o'chiradi (soft delete emas!)
+  if (!result) throw new InternalServerErrorException(Message.REMOVE_FAILED);        // Topilmasa 500 xatosi
+
+  return result;                                                                      // O'chirilgan maqolani qaytaradi (oxirgi marta)
+}
+
+
+//======================================================================
 public async boardArticleStatsEditor(input: StatisticModifier): Promise<BoardArticle | null> { // Maqola statistikasini o'zgartiruvchi universal metod
   const { _id, targetKey, modifier } = input;                                            // Input dan kerakli qiymatlarni ajratib oladi
   return await this.boardArticleModel
@@ -142,3 +211,5 @@ public async boardArticleStatsEditor(input: StatisticModifier): Promise<BoardArt
 }
 
 }
+
+
