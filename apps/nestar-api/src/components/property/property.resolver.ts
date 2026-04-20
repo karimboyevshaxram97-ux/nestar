@@ -30,85 +30,91 @@ export class PropertyResolver {
 
   //============================================================================
 
- @UseGuards(WithoutGuard)
-   @Query((returns) => Property)
-   public async getProperty(
-    @Args('propertyId')  input: string,
-    @AuthMember('_id') memberId: mongoose.ObjectId,
-    ): Promise<Property> {
-      console.log ('Query: getProperty');
-      const propertyId = shapeIntoMongoObjectId(input);
-      return await this.propertyService.getProperty(memberId, propertyId)
-  }
+@UseGuards(WithoutGuard)                        // Guard: login bo'lmagan user ham kira oladi
+@Query((returns) => Property)                   // GraphQL Query - Property tipini qaytaradi
+public async getProperty(
+  @Args('propertyId') input: string,            // GraphQL dan propertyId argumentini oladi (string)
+  @AuthMember('_id') memberId: mongoose.ObjectId, // Token bo'lsa memberId oladi, bo'lmasa undefined
+): Promise<Property> {                          // Har doim Property qaytaradi (async)
+
+  console.log('Query: getProperty');            // Debug uchun log
+
+  const propertyId = shapeIntoMongoObjectId(input); // String → MongoDB ObjectId ga o'giradi
+
+  return await this.propertyService.getProperty(memberId, propertyId); // Service ga uzatadi
+}
 
   //=================================================================
-  @Roles(MemberType.AGENT)
-@UseGuards(RolesGuard)
-@Mutation(() => Property)
-public async updateProperty(
-  @Args('input') input: PropertyUpdate,
-  @AuthMember('_id') memberId: mongoose.ObjectId,
+ @Roles(MemberType.AGENT)                        // Faqat AGENT role ga ruxsat
+ @UseGuards(RolesGuard)                          // Role tekshiruvchi Guard ishlatiladi
+ @Mutation(() => Property)                       // GraphQL Mutation - Property qaytaradi
+ public async updateProperty(
+  @Args('input') input: PropertyUpdate,         // GraphQL dan yangilash ma'lumotlari
+  @AuthMember('_id') memberId: mongoose.ObjectId, // Tokendan Agent ning _id si olinadi
 ): Promise<Property> {
-  console.log('Mutation: updateProperty');
-  input._id = shapeIntoMongoObjectId(input._id);
-  return await this.propertyService.updateProperty(memberId, input);
+
+  console.log('Mutation: updateProperty');      // Debug uchun log
+
+  input._id = shapeIntoMongoObjectId(input._id); // input._id → MongoDB ObjectId ga o'giradi
+
+  return await this.propertyService.updateProperty(memberId, input); // Service ga uzatadi
 }
 //==================================================================
-@UseGuards(WithoutGuard)
-@Query(() => Properties)
+@UseGuards(WithoutGuard)                          // Login bo'lmagan ham kira oladi
+@Query(() => Properties)                          // GraphQL Query, ro'yxat qaytaradi
 public async getProperties(
-  @Args('input') input: PropertiesInquiry,
-  @AuthMember('_id') memberId: mongoose.ObjectId,
-): Promise<Properties > {
-  console.log('Query: getProperties');
-  return await this.propertyService.getProperties(memberId, input);
+  @Args('input') input: PropertiesInquiry,        // Filter, sort, pagination
+  @AuthMember('_id') memberId: mongoose.ObjectId, // Login bo'lsa ObjectId, bo'lmasa undefined
+): Promise<Properties> {                          // { list: Property[], metaCounter: [{total}] }
+  console.log('Query: getProperties');            // Debug log
+  return await this.propertyService.getProperties(memberId, input); // Service ga uzatadi
 }
-//================================================================
-@Roles(MemberType.AGENT)
-@UseGuards(RolesGuard)
-@Query(() => Properties)
-public async getAgentProperties(
-  @Args('input') input: AgentPropertiesInquiry,
-  @AuthMember('_id') memberId: mongoose.ObjectId,
-): Promise<Properties> {
-  console.log('Query: getAgentProperties');
-  return await this.propertyService.getAgentProperties(memberId, input);
-}
-//========================================================================
 
- /**ADMIN */
+//===============================================================
+@Roles(MemberType.AGENT)
+@UseGuards(RolesGuard)                            // Faqat AGENT kira oladi
+@Query(() => Properties)                          // GraphQL Query, ro'yxat qaytaradi
+public async getAgentProperties(
+  @Args('input') input: AgentPropertiesInquiry,   // Agent uchun maxsus filter/sort/pagination
+  @AuthMember('_id') memberId: mongoose.ObjectId, // Tokendan Agent ning _id si
+): Promise<Properties> {
+  console.log('Query: getAgentProperties');       // Debug log
+  return await this.propertyService.getAgentProperties(memberId, input); // Faqat o'z propertylarini ko'radi
+}
+
+// ====ADMIN=====================================================
 
 @Roles(MemberType.ADMIN)
-@UseGuards(RolesGuard)
-@Query((returns) => Properties)
+@UseGuards(RolesGuard)                            // Faqat ADMIN kira oladi
+@Query((returns) => Properties)                   // GraphQL Query, ro'yxat qaytaradi
 public async getAllPropertiesByAdmin(
-  @Args('input') input: AllPropertiesInquiry,
-  @AuthMember('_id') memberId: mongoose.ObjectId,
+  @Args('input') input: AllPropertiesInquiry,     // Admin uchun keng filter (barcha statuslar)
+  @AuthMember('_id') memberId: mongoose.ObjectId, // Admin _id si (logda ishlatilishi mumkin)
 ): Promise<Properties> {
-  console.log('Query: getAllPropertiesByAdmin');
-  return await this.propertyService.getAllPropertiesByAdmin(input);
+  console.log('Query: getAllPropertiesByAdmin');   // Debug log
+  return await this.propertyService.getAllPropertiesByAdmin(input); // memberId ishlatilmaydi!
 }
- //=======================================================================
- @Roles(MemberType.ADMIN)
-@UseGuards(RolesGuard)
-@Mutation((returns) => Property)
+//===============================================================
+
+@Roles(MemberType.ADMIN)
+@UseGuards(RolesGuard)                            // Faqat ADMIN kira oladi
+@Mutation((returns) => Property)                  // GraphQL Mutation, Property qaytaradi
 public async updatePropertyByAdmin(
-  @Args('input') input: PropertyUpdate,
-): Promise<Property> {
-  console.log('Mutation: updatePropertyByAdmin');
-  input._id = shapeIntoMongoObjectId(input._id);
+  @Args('input') input: PropertyUpdate,           // Yangilash ma'lumotlari
+): Promise<Property> {                            // ⚠️ memberId yo'q - Admin hamma nimani o'zgartira oladi
+  console.log('Mutation: updatePropertyByAdmin'); // Debug log
+  input._id = shapeIntoMongoObjectId(input._id);  // String → MongoDB ObjectId
   return await this.propertyService.updatePropertyByAdmin(input);
 }
- 
-//======================================================================
+//===============================================================
 @Roles(MemberType.ADMIN)
-@UseGuards(RolesGuard)
-@Mutation((returns) => Property)
+@UseGuards(RolesGuard)                             // Faqat ADMIN kira oladi
+@Mutation((returns) => Property)                   // GraphQL Mutation, o'chirilgan Property qaytaradi
 public async removePropertyByAdmin(
-  @Args('propertyId') input: string,
-): Promise<Property> {
-  console.log('Mutation: removePropertyByAdmin');
-  const propertyId = shapeIntoMongoObjectId(input);
+  @Args('propertyId') input: string,               // O'chiriladigan property ID (string)
+): Promise<Property> {                             // ⚠️ memberId yo'q - Admin istalgan propertyni o'chira oladi
+  console.log('Mutation: removePropertyByAdmin');  // Debug log
+  const propertyId = shapeIntoMongoObjectId(input);// String → MongoDB ObjectId
   return await this.propertyService.removePropertyByAdmin(propertyId);
 }
 }

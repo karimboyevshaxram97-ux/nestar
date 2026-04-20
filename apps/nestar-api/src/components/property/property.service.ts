@@ -43,41 +43,45 @@ export class PropertyService {
     }
   }
  //================================================================
- public async getProperty(memberId: ObjectId, propertyId: ObjectId): Promise<Property> {
+ public async getProperty(memberId: ObjectId, propertyId: ObjectId): Promise<Property> {          // Bitta mulkni ID bo'yicha olish metodi
   const search: T = {
-    _id: propertyId,
-    propertyStatus: PropertyStatus.ACTIVE,
+    _id: propertyId,                                                                               // Qidirilayotgan mulk ID si
+    propertyStatus: PropertyStatus.ACTIVE,                                                         // Faqat ACTIVE mulkni qaytaradi
   };
 
-  const targetProperty: Property | null = await this.propertyModel.findOne(search).lean().exec();
-  if (!targetProperty) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+  const targetProperty: Property | null = await this.propertyModel.findOne(search).lean().exec(); // MongoDB dan bitta hujjat qidiradi
+                                                                                                   // .lean() = toza JS object (mongoose metodlarsiz, tezroq)
+                                                                                                   // .exec() = Promise qaytaradi
+  if (!targetProperty) throw new InternalServerErrorException(Message.NO_DATA_FOUND);             // Topilmasa 500 xatosi qaytaradi
 
-  if (memberId) {
-    const viewInput = { memberId: memberId, viewRefId: propertyId, viewGroup: ViewGroup.PROPERTY };
-    const newView = await this.viewService.recordView(viewInput);
-    if (newView) {
-      await this.propertyStatsEditor({ _id: propertyId, targetKey: 'propertyViews', modifier: 1 });
-      targetProperty.propertyViews++;
+  if (memberId) {                                                                                  // Agar foydalanuvchi login bo'lgan bo'lsa
+    const viewInput = { memberId: memberId, viewRefId: propertyId, viewGroup: ViewGroup.PROPERTY }; // Ko'rish ma'lumotlarini tayyorlaydi
+    const newView = await this.viewService.recordView(viewInput);                                  // Ko'rishni qayd etadi (takroran qayd etmaydi)
+    if (newView) {                                                                                  // Agar yangi ko'rish bo'lsa (takror emas)
+      await this.propertyStatsEditor({ _id: propertyId, targetKey: 'propertyViews', modifier: 1 }); // DBda propertyViews +1
+      targetProperty.propertyViews++;                                                              // Lokal objectda ham +1 (DB ga qayta so'rov yubormaslik uchun)
     }
   }
 
-  // meLiked
+  // meLiked — hozircha yozilmagan (keyinroq qo'shiladi)
 
- targetProperty.memberData = await this.memberService.getMember(targetProperty.memberId, targetProperty.memberId); // null bulganda error berdi.
-  return targetProperty;
+  targetProperty.memberData = await this.memberService.getMember(                                 // Mulk egasining to'liq ma'lumotlarini oladi
+    targetProperty.memberId,                                                                        // Eganing ID si (kimning ma'lumoti kerak)
+    targetProperty.memberId,                                                                        // ⚠️ Ikkalasi ham memberId — null bo'lganda xato bergan, shu sababli o'zini o'ziga uzatildi
+  );
+  return targetProperty;                                                                           // To'liq mulk ma'lumotini qaytaradi
 }
 
-public async propertyStatsEditor(input: StatisticModifier): Promise< null | Property> {
-  const { _id, targetKey, modifier } = input;
+public async propertyStatsEditor(input: StatisticModifier): Promise<null | Property> {           // Mulk statistikasini o'zgartiruvchi universal metod
+  const { _id, targetKey, modifier } = input;                                                     // Input dan kerakli qiymatlarni ajratib oladi
   return await this.propertyModel
     .findByIdAndUpdate(
-      _id,
-      { $inc: { [targetKey]: modifier } },
-      { new: true },
+      _id,                                                                                         // Qaysi hujjatni yangilash
+      { $inc: { [targetKey]: modifier } },                                                         // targetKey maydonini modifier ga o'zgartiradi (+1 yoki -1)
+      { new: true },                                                                               // Yangilangan hujjatni qaytaradi (eski emas)
     )
-    .exec();
+    .exec();                                                                                       // Promise qaytaradi
 }
-
 //==============================================================================
  
 public async updateProperty(memberId: ObjectId, input: PropertyUpdate): Promise<Property> {
