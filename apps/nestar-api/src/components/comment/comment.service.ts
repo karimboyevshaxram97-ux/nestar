@@ -108,4 +108,15 @@ export class CommentService {
 
   return result[0];                                                                  // Natijaning birinchi elementini qaytaradi (list va metaCounter)
 }
+
+//================================================================
+ 
+  /**ADMIN */
+ public async removeCommentByAdmin(input: ObjectId): Promise<Comment> { // Asinxron funksiya: admin commentni o‘chiradi
+  const result = await this.commentModel.findByIdAndDelete(input); // MongoDB model orqali commentni ID bo‘yicha o‘chiradi
+  if (!result) throw new InternalServerErrorException(Message.REMOVE_FAILED); // Agar natija bo‘lmasa, xato tashlaydi
+  return result; // O‘chirilgan commentni qaytaradi
+}
+
+
 }

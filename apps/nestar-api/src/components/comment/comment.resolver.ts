@@ -9,6 +9,9 @@ import { Comments, Comment } from '../../libs/dto/comment/comment';
 import { CommentUpdate } from '../../libs/dto/comment/comment.update'; // DTO: comment yangilash uchun
 import { shapeIntoMongoObjectId } from '../../libs/config';  // Stringni ObjectId ga aylantirish uchun yordamchi funksiya
 import { CommentInput, CommentsInquiry } from '../../libs/dto/comment/comment.input';  // DTO: comment yaratish uchun input
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { MemberType } from '../../libs/enums/member.enum';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 
 @Resolver() // GraphQL resolver klassi
@@ -52,5 +55,18 @@ public async getComments(
   const result = await this.commentService.getComments(memberId, input); // CommentService orqali commentlarni olish jarayonini bajaradi
   return result; // Olingan commentlarni qaytaradi
 }
+
+//================================================================
+
+/**ADMIN  */
+@Roles(MemberType.ADMIN) // Faqat ADMIN roliga ega bo‘lgan foydalanuvchilarga ruxsat beriladi
+@UseGuards(RolesGuard) // RolesGuard qo‘llanmoqda, rolni tekshiradi
+@Mutation((returns) => Comment) // GraphQL mutation: Comment obyektini qaytaradi
+public async removeCommentByAdmin(@Args('commentId') input: string): Promise<Comment> { // Asinxron funksiya: admin commentni o‘chiradi
+  console.log('Mutation: removeCommentByAdmin'); // Konsolga log chiqaradi
+  const commentId = shapeIntoMongoObjectId(input); // String ID ni Mongo ObjectId ga aylantiradi
+  return await this.commentService.removeCommentByAdmin(commentId); // CommentService orqali commentni o‘chirish jarayonini bajaradi
+}
+
 
 }
