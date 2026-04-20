@@ -17,6 +17,7 @@ export const availablePropertySorts = [
   'propertyPrice',
 ];
 
+export const avilableBoardArticleSorts = ['createdAt', 'updateAt', 'articleLikes', 'articleViews']
 
 //====================================
 /* IMAGE CONFIGURATION (config.js)*/
