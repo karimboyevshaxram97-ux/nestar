@@ -92,6 +92,17 @@ public async getAgents(
   console.log('Query: getAgents');
   return await this.memberService.getAgents(memberId, input);
 }
+ //==========================LIKE =========================================
+ @UseGuards(AuthGuard)                                                           // Faqat login bo'lgan user kira oladi
+@Mutation(() => Member)                                                         // GraphQL Mutation, Member qaytaradi
+public async likeTargetMember(
+  @Args('memberId') input: string,                                              // Like bosiladigan member ID si (string)
+  @AuthMember('_id') memberId: mongoose.ObjectId,                                        // Tokendan like bosgan user ning ID si
+): Promise<Member> {
+  console.log('Mutation: likeTargetMember');                                   // Debug log
+  const likeRefId = shapeIntoMongoObjectId(input);                             // String → MongoDB ObjectId ga o'giradi
+  return await this.memberService.likeTargetMember(memberId, likeRefId);       // Service ga uzatadi
+}
 
 //=========================================================================
 /** ADMIN **/

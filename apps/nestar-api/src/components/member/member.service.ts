@@ -11,6 +11,9 @@ import { MemberUpdate } from '../../libs/dto/member/member.update';
 import { ViewService } from '../view/view.service';
 import { ViewGroup } from '../../libs/enums/view.enum';
 import { StatisticModifier, T } from '../../libs/types/common';
+import { LikeInput } from '../../libs/dto/like/like.input';
+import { LikeGroup } from '../../libs/enums/like.enum';
+import { LikeService } from '../like/like.service';
 
 
 @Injectable()
@@ -19,6 +22,7 @@ export class MemberService {
       @InjectModel('Member') private readonly memberModel: Model<Member>,
     private authService: AuthService,
     private viewService: ViewService,
+    private likeService: LikeService,
     ) {}
 
   //==========================================================================
@@ -129,6 +133,30 @@ export class MemberService {
   if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
   return result[0];
+}
+//==========================LIKE================================
+public async likeTargetMember(memberId: ObjectId, likeRefId: ObjectId): Promise<Member> { // Member ga like bosish metodi
+  const target: Member | null = await this.memberModel                                            // Like bosiladigan memberni qidiradi
+    .findOne({ _id: likeRefId, memberStatus: MemberStatus.ACTIVE })                       // Faqat ACTIVE memberni topadi
+    .exec();
+  if (!target) throw new InternalServerErrorException(Message.NO_DATA_FOUND);             // Topilmasa 500 xatosi
+
+  const input: LikeInput = {                                                              // Like ma'lumotlarini tayyorlaydi
+    memberId: memberId,                                                                    // Like bosgan userning ID si
+    likeRefId: likeRefId,                                                                  // Like bosilgan memberning ID si
+    likeGroup: LikeGroup.MEMBER,                                                           // Like turi: MEMBER (property, article emas)
+  };
+
+  // LIKE TOGGLE via Like modules
+  const modifier: number = await this.likeService.toggleLike(input);                                                             // ⚠️ Hozircha faqat +1 (toggle hali to'liq yozilmagan)
+  const result = await this.memberStatsEditor({                                           // Member statistikasini yangilaydi
+    _id: likeRefId,                                                                        // Like bosilgan memberning ID si
+    targetKey: 'memberLikes',                                                              // memberLikes maydonini o'zgartiradi
+    modifier: modifier,                                                                    // +1 qo'shadi (like soni oshadi)
+  });
+
+  if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);     // Yangilanmasa 500 xatosi
+  return result;                                                                           // Yangilangan member ma'lumotini qaytaradi
 }
   
 //===============================================================

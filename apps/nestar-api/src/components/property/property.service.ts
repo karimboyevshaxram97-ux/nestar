@@ -11,15 +11,21 @@ import { StatisticModifier, T } from '../../libs/types/common';
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
 import moment from 'moment';
 import { lookupMember, shapeIntoMongoObjectId } from '../../libs/config';
+import { ViewService } from '../view/view.service';
+import { LikeService } from '../like/like.service';
+import { LikeInput } from '../../libs/dto/like/like.input';
+import { LikeGroup } from '../../libs/enums/like.enum';
 
 @Injectable()
 export class PropertyService {
-  viewService: any;
   constructor(
     @InjectModel('Property') private readonly propertyModel: Model<Property>,
     // MongoDB Property modelini inject qiladi
     private memberService: MemberService,
     // Member statistikasini yangilash uchun
+    private viewService: ViewService,
+    private likeService: LikeService,
+
   ) {}
 
    //==============================================================
@@ -224,6 +230,31 @@ public async getAgentProperties(memberId: ObjectId, input: AgentPropertiesInquir
 
   return result[0];
 }
+
+//=============================LIKE=========================================
+public async likeTargetProperty(memberId: ObjectId, likeRefId: ObjectId): Promise<Property> { // Property ga like bosish metodi
+  const target: Property | null = await this.propertyModel
+    .findOne({ _id: likeRefId, propertyStatus: PropertyStatus.ACTIVE })        // Faqat ACTIVE propertyni topadi
+    .exec();
+  if (!target) throw new InternalServerErrorException(Message.NO_DATA_FOUND);  // Topilmasa 500 xatosi
+
+  const input: LikeInput = {                                                   // Like ma'lumotlarini tayyorlaydi
+    memberId: memberId,                                                         // Like bosgan userning ID si
+    likeRefId: likeRefId,                                                      // Like bosilgan propertyning ID si
+    likeGroup: LikeGroup.PROPERTY,                                             // Like turi: PROPERTY (member, article emas)
+  };
+
+  const modifier: number = await this.likeService.toggleLike(input);          // +1 yoki -1 qaytaradi (like/unlike)
+  const result = await this.propertyStatsEditor({                              // Property statistikasini yangilaydi
+    _id: likeRefId,                                                            // Like bosilgan propertyning ID si
+    targetKey: 'propertyLikes',                                                // propertyLikes maydonini o'zgartiradi
+    modifier: modifier,                                                        // +1 yoki -1
+  });
+
+  if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG); // Yangilanmasa 500 xatosi
+  return result;                                                               // Yangilangan propertyni qaytaradi
+}s
+
 
 //===========================================================================
 public async getAllPropertiesByAdmin(input: AllPropertiesInquiry): Promise<Properties> {

@@ -11,6 +11,7 @@ import { MemberType } from '../../libs/enums/member.enum';
 import { WithoutGuard } from '../auth/guards/without.guard';
 import { shapeIntoMongoObjectId } from '../../libs/config';
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
+import { AuthGuard } from '../auth/guards/auth.guard';
 
 @Resolver()
 export class PropertyResolver {
@@ -81,6 +82,19 @@ public async getAgentProperties(
   console.log('Query: getAgentProperties');       // Debug log
   return await this.propertyService.getAgentProperties(memberId, input); // Faqat o'z propertylarini ko'radi
 }
+
+//============================LIKE ============================
+@UseGuards(AuthGuard)                                                           // Faqat login bo'lgan user kira oladi
+@Mutation(() => Property)                                                       // GraphQL Mutation, Property qaytaradi
+public async likeTargetProperty(
+  @Args('propertyId') input: string,                                              // Like bosiladigan property ID si (string)
+  @AuthMember('_id') memberId: mongoose.ObjectId,                                        // Tokendan like bosgan user ning ID si
+): Promise<Property> {
+  console.log('Mutation: likeTargetProperty');                                 // Debug log
+  const likeRefId = shapeIntoMongoObjectId(input);                             // String → MongoDB ObjectId ga o'giradi
+  return await this.propertyService.likeTargetProperty(memberId, likeRefId);   // Service ga uzatadi
+}
+
 
 // ====ADMIN=====================================================
 
