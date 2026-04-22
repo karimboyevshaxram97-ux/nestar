@@ -63,6 +63,20 @@ public async getBoardArticles(
   console.log('Query: getBoardArticles');                                       // Debug log
   return await this.boardArticleService.getBoardArticles(memberId, input);      // Service ga uzatadi
 }
+  //================like============================================
+
+  @UseGuards(AuthGuard)                                                           // Faqat login bo'lgan user kira oladi
+@Mutation(() => BoardArticle)                                                   // GraphQL Mutation, BoardArticle qaytaradi
+public async likeTargetBoardArticle(
+  @Args('articleId') input: string,                                             // Like bosiladigan maqola ID si (string)
+  @AuthMember('_id') memberId: mongoose.ObjectId,                                        // Tokendan like bosgan user ning ID si
+): Promise<BoardArticle> {
+  console.log('Mutation: likeTargetBoardArticle');                             // Debug log
+  const likeRefId = shapeIntoMongoObjectId(input);                             // String → MongoDB ObjectId ga o'giradi
+  return await this.boardArticleService.likeTargetBoardArticle(memberId, likeRefId); // Service ga uzatadi
+}
+
+
  //==================================================================
 
 /* AMIN */

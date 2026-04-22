@@ -11,6 +11,9 @@ import { ViewGroup } from '../../libs/enums/view.enum';                         
 import { BoardArticleUpdate } from '../../libs/dto/board-article/board-article.update';          // Yangilash DTO si
 import { lookupMember, shapeIntoMongoObjectId } from '../../libs/config';                         // Yordamchi funksiyalar
 import { StatisticModifier, T } from '../../libs/types/common';                                   // Statistika turi va T (any object)
+import { LikeService } from '../like/like.service';
+import { LikeInput } from '../../libs/dto/like/like.input';
+import { LikeGroup } from '../../libs/enums/like.enum';
 
 @Injectable()                                                                                     // NestJS DI uchun belgi
 export class BoardArticleService {
@@ -18,6 +21,7 @@ export class BoardArticleService {
     @InjectModel('BoardArticle') private readonly boardArticleModel: Model<BoardArticle>,         // 'BoardArticle' MongoDB modelini inject qiladi
     private readonly memberService: MemberService,                                                 // Member statistikasini yangilash uchun
     private readonly viewService: ViewService,                                                     // Ko'rishlarni qayd etish uchun
+    private readonly likeService: LikeService,
   ) {}
   //=============================1==================================
   public async createBoardArticle(memberId: ObjectId, input: BoardArticleInput): Promise<BoardArticle> { // Yangi maqola yaratish metodi
@@ -65,6 +69,31 @@ export class BoardArticleService {
                                                                                                  // ⚠️ null — memberId o'rniga, chunki public sahifa (o'zi emas)
   return targetBoardArticle;                                                                     // To'liq maqola ma'lumotini qaytaradi
 } 
+
+//=========================like===============================================
+
+public async likeTargetBoardArticle(memberId: ObjectId, likeRefId: ObjectId): Promise<BoardArticle> { // Maqolaga like bosish metodi
+  const target: BoardArticle | null = await this.boardArticleModel
+    .findOne({ _id: likeRefId, articleStatus: BoardArticleStatus.ACTIVE })      // ⚠️ memberStatus emas — articleStatus bo'lishi kerak edi
+    .exec();
+  if (!target) throw new InternalServerErrorException(Message.NO_DATA_FOUND);  // Topilmasa 500 xatosi
+
+  const input: LikeInput = {                                                   // Like ma'lumotlarini tayyorlaydi
+    memberId: memberId,                                                         // Like bosgan userning ID si
+    likeRefId: likeRefId,                                                      // Like bosilgan maqolaning ID si
+    likeGroup: LikeGroup.ARTICLE,                                              // Like turi: ARTICLE (member, property emas)
+  };
+
+  const modifier: number = await this.likeService.toggleLike(input);          // +1 yoki -1 qaytaradi (like/unlike)
+  const result = await this.boardArticleStatsEditor({                          // Maqola statistikasini yangilaydi
+    _id: likeRefId,                                                            // Like bosilgan maqolaning ID si
+    targetKey: 'articleLikes',                                                 // articleLikes maydonini o'zgartiradi
+    modifier: modifier,                                                        // +1 yoki -1
+  });
+
+  if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG); // Yangilanmasa 500 xatosi
+  return result;                                                               // Yangilangan maqolani qaytaradi
+}
 
 //=========================3=====================================================
  
