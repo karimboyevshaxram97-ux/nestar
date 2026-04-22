@@ -30,42 +30,42 @@ export class CommentResolver {
   }
 
   //==============================================================
-  
-  @UseGuards(AuthGuard) // AuthGuard qo‘llanmoqda, faqat autentifikatsiyadan o‘tgan foydalanuvchilar kiradi
-@Mutation(returns => Comment) // GraphQL mutation: Comment obyektini qaytaradi
+   
+  @UseGuards(AuthGuard)                                               // AuthGuard qo‘llanmoqda, faqat autentifikatsiyadan o‘tgan foydalanuvchilar kiradi
+@Mutation(returns => Comment)                                           // GraphQL mutation: Comment obyektini qaytaradi
 public async updateComment(
-  @Args('input') input: CommentUpdate, // GraphQL argument: comment yangilash uchun DTO
-  @AuthMember('_id') memberId: mongoose.ObjectId, // AuthMember dekoratori orqali foydalanuvchi ID olinadi
+  @Args('input') input: CommentUpdate,                                  // GraphQL argument: comment yangilash uchun DTO
+  @AuthMember('_id') memberId: mongoose.ObjectId,                      // AuthMember dekoratori orqali foydalanuvchi ID olinadi
 ): Promise<Comment> {
-  console.log('Mutation: updateComment'); // Konsolga log chiqaradi
-  input._id = shapeIntoMongoObjectId(input._id); // String ID ni Mongo ObjectId ga aylantiradi
-  return await this.commentService.updateComment(memberId, input); // CommentService orqali yangilash jarayonini bajaradi
+  console.log('Mutation: updateComment');                              // Konsolga log chiqaradi
+  input._id = shapeIntoMongoObjectId(input._id);                       // String ID ni Mongo ObjectId ga aylantiradi
+  return await this.commentService.updateComment(memberId, input);     // CommentService orqali yangilash jarayonini bajaradi
 }
 
 //================================================================
 
- @UseGuards(WithoutGuard) // WithoutGuard qo‘llanmoqda, bu yerda autentifikatsiyasiz kirish ruxsat etiladi
-@Query((returns) => Comments) // GraphQL query: Comments obyektini qaytaradi
-public async getComments(
-  @Args('input') input: CommentsInquiry, // GraphQL argument: commentlarni olish uchun inquiry DTO
-  @AuthMember('_id') memberId: mongoose.ObjectId, // AuthMember dekoratori orqali foydalanuvchi ID olinadi
+ @UseGuards(WithoutGuard)                                              // WithoutGuard qo‘llanmoqda, bu yerda autentifikatsiyasiz kirish ruxsat etiladi
+@Query((returns) => Comments)                                          // GraphQL query: Comments obyektini qaytaradi
+public async getComments( 
+  @Args('input') input: CommentsInquiry,                              // GraphQL argument: commentlarni olish uchun inquiry DTO
+  @AuthMember('_id') memberId: mongoose.ObjectId,                      // AuthMember dekoratori orqali foydalanuvchi ID olinadi
 ): Promise<Comments> {
-  console.log('query: getComments'); // Konsolga log chiqaradi
+  console.log('query: getComments');                                   // Konsolga log chiqaradi
   input.search.commentRefId = shapeIntoMongoObjectId(input.search.commentRefId); // String ID ni Mongo ObjectId ga aylantiradi
   const result = await this.commentService.getComments(memberId, input); // CommentService orqali commentlarni olish jarayonini bajaradi
-  return result; // Olingan commentlarni qaytaradi
+  return result;                                                   // Olingan commentlarni qaytaradi
 }
 
 //================================================================
 
 /**ADMIN  */
-@Roles(MemberType.ADMIN) // Faqat ADMIN roliga ega bo‘lgan foydalanuvchilarga ruxsat beriladi
-@UseGuards(RolesGuard) // RolesGuard qo‘llanmoqda, rolni tekshiradi
-@Mutation((returns) => Comment) // GraphQL mutation: Comment obyektini qaytaradi
+@Roles(MemberType.ADMIN)                                                                 // Faqat ADMIN roliga ega bo‘lgan foydalanuvchilarga ruxsat beriladi
+@UseGuards(RolesGuard)                                                                  // RolesGuard qo‘llanmoqda, rolni tekshiradi
+@Mutation((returns) => Comment)                                                         // GraphQL mutation: Comment obyektini qaytaradi
 public async removeCommentByAdmin(@Args('commentId') input: string): Promise<Comment> { // Asinxron funksiya: admin commentni o‘chiradi
-  console.log('Mutation: removeCommentByAdmin'); // Konsolga log chiqaradi
-  const commentId = shapeIntoMongoObjectId(input); // String ID ni Mongo ObjectId ga aylantiradi
-  return await this.commentService.removeCommentByAdmin(commentId); // CommentService orqali commentni o‘chirish jarayonini bajaradi
+  console.log('Mutation: removeCommentByAdmin');                                        // Konsolga log chiqaradi
+  const commentId = shapeIntoMongoObjectId(input);                                      // String ID ni Mongo ObjectId ga aylantiradi
+  return await this.commentService.removeCommentByAdmin(commentId);                      // CommentService orqali commentni o‘chirish jarayonini bajaradi
 }
 
 
