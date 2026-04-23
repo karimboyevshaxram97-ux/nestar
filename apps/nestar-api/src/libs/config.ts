@@ -36,3 +36,22 @@ export const lookupMember = {                                                  /
     as: 'memberData',                                                          // Natija 'memberData' nomi bilan qo'shiladi (array)
   },
 };
+
+
+  export const lookupFollowingData = {                // Kuzatilayotgan member ma'lumotlarini biriktiradi
+  $lookup: {                                        // SQL dagi JOIN ga o'xshash
+    from: 'members',                               // 'members' collectionidan qidiradi
+    localField: 'followingId',                     // Joriy collectiondagi kalit maydon
+    foreignField: '_id',                           // members collectionidagi mos maydon
+    as: 'followingData',                           // Natija 'followingData' nomi bilan qo'shiladi (array)
+  },
+};
+
+export const lookupFollowerData = {                 // Kuzatuvchi member ma'lumotlarini biriktiradi
+  $lookup: {                                        // SQL dagi JOIN ga o'xshash
+    from: 'members',                               // 'members' collectionidan qidiradi
+    localField: 'followerId',                      // Joriy collectiondagi kalit maydon
+    foreignField: '_id',                           // members collectionidagi mos maydon
+    as: 'followerData',                            // Natija 'followerData' nomi bilan qo'shiladi (array)
+  },
+};
