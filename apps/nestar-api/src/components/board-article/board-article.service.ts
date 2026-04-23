@@ -14,6 +14,7 @@ import { StatisticModifier, T } from '../../libs/types/common';                 
 import { LikeService } from '../like/like.service';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
+import { Follower, Following, MeFollowed } from '../../libs/dto/follow/follow';
 
 @Injectable()                                                                                     // NestJS DI uchun belgi
 export class BoardArticleService {
@@ -228,6 +229,7 @@ public async getAllBoardArticlesByAdmin(input: AllBoardArticlesInquiry): Promise
 
   return result;                                                                      // O'chirilgan maqolani qaytaradi (oxirgi marta)
 }
+
 
 
 //======================================================================

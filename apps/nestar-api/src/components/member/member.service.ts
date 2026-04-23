@@ -14,12 +14,14 @@ import { StatisticModifier, T } from '../../libs/types/common';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
 import { LikeService } from '../like/like.service';
+import { Follower, Following } from '../../libs/dto/follow/follow';
 
 
 @Injectable()
 export class MemberService {
     constructor(
       @InjectModel('Member') private readonly memberModel: Model<Member>,
+      @InjectModel('Follow') private readonly followModel: Model<Follower | Following>,
     private authService: AuthService,
     private viewService: ViewService,
     private likeService: LikeService,
@@ -100,15 +102,26 @@ export class MemberService {
       await this.memberModel.findOneAndUpdate(search, { $inc: { memberViews: 3 } }, { new: true }).exec();
       targetMember.memberViews++;
     }
-  }
+  
    
-  // meLiked
+    // meLiked
     const likeInput = { memberId: memberId, likeRefId: targetId, likeGroup: LikeGroup.MEMBER }; // Like tekshirish uchun ma'lumotlar tayyorlanadi
-  (targetMember as any).meLiked = await this.likeService.checkLikeExistence(likeInput);           // Bu user target memberni like bosganmi → meLiked ga yoziladi
-  // meFollowed
-
-
+    (targetMember as any).meLiked = await this.likeService.checkLikeExistence(likeInput);           // Bu user target memberni like bosganmi → meLiked ga yoziladi
+  
+   // meFollowed
+    targetMember.meFollowed = await this.checkSubscription(memberId, targetId);
+  }
+ 
   return targetMember;
+ 
+
+}
+
+//==================================================================
+public async updateMemberByAdmin(input: MemberUpdate): Promise<Member> {
+  const result: Member | null = await this.memberModel.findOneAndUpdate({ _id: input._id }, input, { new: true }).exec();
+  if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
+  return result;
 }
 
 //=================getagents==================================
@@ -191,11 +204,9 @@ public async likeTargetMember(memberId: ObjectId, likeRefId: ObjectId): Promise<
   return result[0];
 }
 
-//==================================================================
-public async updateMemberByAdmin(input: MemberUpdate): Promise<Member> {
-  const result: Member | null = await this.memberModel.findOneAndUpdate({ _id: input._id }, input, { new: true }).exec();
-  if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
-  return result;
+private async checkSubscription(followerId: ObjectId, followingId: ObjectId): Promise<any[]> {
+  const result = await this.followModel.findOne({ followingId, followerId }).exec();
+  return result ? [{ followerId, followingId, myFollowing: true }] : [];
 }
 
 //================================================================

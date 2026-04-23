@@ -2,6 +2,7 @@ import { Field, Int, ObjectType } from '@nestjs/graphql';
 import type { ObjectId } from 'mongoose';
 import { MemberAuthType, MemberStatus, MemberType } from '../../enums/member.enum';
 import { MeLiked } from '../like/like';
+import { MeFollowed } from '../follow/follow';
 
 
 
@@ -87,6 +88,9 @@ export class Member {
 
   @Field(() => [MeLiked], { nullable: true })   // GraphQL da MeLiked array, ixtiyoriy (null bo'lishi mumkin)
   meLiked?: MeLiked[];                           // Like bosilganmi tekshirish uchun — login user uchun to'ldiriladi
+
+  @Field(() => [MeFollowed], { nullable: true })   // GraphQL da MeFollowed array, ixtiyoriy (null bo'lishi mumkin)
+ meFollowed?: MeFollowed[];                        // Kuzatilayaptimi tekshirish uchun — login user uchun to'ldiriladi  
 
 }
 
