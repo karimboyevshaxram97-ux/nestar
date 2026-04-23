@@ -103,7 +103,11 @@ export class MemberService {
   }
    
   // meLiked
+    const likeInput = { memberId: memberId, likeRefId: targetId, likeGroup: LikeGroup.MEMBER }; // Like tekshirish uchun ma'lumotlar tayyorlanadi
+  (targetMember as any).meLiked = await this.likeService.checkLikeExistence(likeInput);           // Bu user target memberni like bosganmi → meLiked ga yoziladi
   // meFollowed
+
+
   return targetMember;
 }
 

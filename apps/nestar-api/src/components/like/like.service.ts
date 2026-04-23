@@ -5,12 +5,13 @@ import { Member } from '../../libs/dto/member/member';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { T } from '../../libs/types/common';
 import { Message } from '../../libs/enums/common.enum';
+import { Like, MeLiked } from '../../libs/dto/like/like';
 
 @Injectable()
 export class LikeService {
      
      constructor(
-          @InjectModel('Like') private readonly likeModel: Model<Member>){}
+          @InjectModel('Like') private readonly likeModel: Model<Like>){}
   
          public async toggleLike(input: LikeInput): Promise<number> {                  // Like qo'shish/o'chirish metodi, modifier qaytaradi
   const search: T = { memberId: input.memberId, likeRefId: input.likeRefId }; // Like qidirish uchun kalit maydonlar
@@ -33,4 +34,11 @@ export class LikeService {
   return modifier;                                                             // +1 yoki -1 qaytaradi (member.service ga uzatiladi)
 }
 
+//=================checklikeexisted ================================
+public async checkLikeExistence(input: LikeInput): Promise<MeLiked[]> {        // Like mavjudligini tekshiruvchi metod
+  const { memberId, likeRefId } = input;                                        // memberId va likeRefId ni ajratib oladi
+  const result = await this.likeModel.findOne({ memberId, likeRefId }).exec();  // Bu user bu targetni like bosganmi tekshiradi
+  return result ? [{ memberId, likeRefId, myFavorite: true }] : [];            // Like bor → [{ myFavorite: true }], yo'q → bo'sh array []
+}
+  
 }

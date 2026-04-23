@@ -63,6 +63,9 @@ export class BoardArticleService {
     }
 
     // meLiked — hozircha yozilmagan (keyinroq qo'shiladi)
+    const likeInput = { memberId: memberId, likeRefId: articleId, likeGroup: LikeGroup.ARTICLE };     // Like tekshirish uchun ma'lumotlar (ARTICLE turi)
+    targetBoardArticle.meLiked = await this.likeService.checkLikeExistence(likeInput);       // Bu user bu maqolani like bosganmi → meLiked ga yoziladi
+
   }
 
   targetBoardArticle.memberData = await this.memberService.getMember(memberId, targetBoardArticle.memberId); // Maqola egasining ma'lumotlarini oladi

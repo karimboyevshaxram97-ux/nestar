@@ -70,6 +70,8 @@ export class PropertyService {
   }
 
   // meLiked — hozircha yozilmagan (keyinroq qo'shiladi)
+  const likeInput = { memberId: memberId, likeRefId: propertyId, likeGroup: LikeGroup.PROPERTY };
+   targetProperty.meLiked = await this.likeService.checkLikeExistence(likeInput);
 
   targetProperty.memberData = await this.memberService.getMember(                                 // Mulk egasining to'liq ma'lumotlarini oladi
     targetProperty.memberId,                                                                        // Eganing ID si (kimning ma'lumoti kerak)

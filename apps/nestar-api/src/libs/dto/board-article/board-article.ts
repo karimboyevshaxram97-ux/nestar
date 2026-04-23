@@ -2,6 +2,7 @@ import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { BoardArticleCategory, BoardArticleStatus } from '../../enums/board-article.enum';
 import * as mongoose from 'mongoose';
 import { Member, TotalCounter } from '../member/member';
+import { MeLiked } from '../like/like';
 
 @ObjectType()
 export class BoardArticle {
@@ -42,6 +43,9 @@ export class BoardArticle {
 	updatedAt: Date;
 
 	/** from aggregation **/
+
+	@Field(() => [MeLiked], { nullable: true })   // GraphQL da MeLiked array, ixtiyoriy (null bo'lishi mumkin)
+     meLiked?: MeLiked[];                           // Like bosilganmi tekshirish uchun — login user uchun to'ldiriladi
 
 	@Field(() => Member, { nullable: true })
 	memberData?: Member;
