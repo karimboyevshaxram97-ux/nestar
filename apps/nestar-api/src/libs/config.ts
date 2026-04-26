@@ -17,6 +17,7 @@ export const availableCommentSorts = ['createdAt', 'updatedAt'];                
 /** IMAGE CONFIGURATION **/
 import { v4 as uuidv4 } from 'uuid';                                          // Noyob ID generatsiya qilish uchun
 import * as path from 'path';                                                  // Fayl yo'li bilan ishlash uchun
+import { T } from './types/common';
 
 export const validMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];        // Ruxsat etilgan rasm formatlari
 export const getSerialForImage = (filename: string) => {                       // Rasm uchun noyob fayl nomi yaratadi
@@ -27,6 +28,41 @@ export const getSerialForImage = (filename: string) => {                       /
 export const shapeIntoMongoObjectId = (target: any) => {                       // String → MongoDB ObjectId ga o'giruvchi funksiya
   return typeof target === 'string' ? new ObjectId(target) : target;          // String bo'lsa → ObjectId ga o'giradi, aks holda o'zini qaytaradi
 };
+
+export const lookupAuthMemberLiked = (memberId: T, targetRefId: string = '$_id') => { // Login user like bosganmi tekshiruvchi $lookup
+  return {
+    $lookup: {
+      from: 'likes',                                                             // 'likes' collectionidan qidiradi
+      let: {                                                                     // Lokal o'zgaruvchilar e'lon qilinadi
+        localLikeRefId: targetRefId,                                            // Qaysi hujjatni like bosganligini tekshirish uchun
+        localMemberId: memberId,                                                 // Qaysi user like bosganligini tekshirish uchun
+        localMyFavorite: true,                                                   // myFavorite qiymatini true deb belgilaydi
+      },
+      pipeline: [                                                                // Like collectionida qidirish shartlari
+        {
+          $match: {
+            $expr: {
+              $and: [                                                            // Ikki shart ham bajarilishi kerak
+                { $eq: ['$likeRefId', '$$localLikeRefId'] },                   // likeRefId === targetRefId
+                { $eq: ['$memberId', '$$localMemberId'] },                     // memberId === memberId
+              ],
+            },
+          },
+        },
+        {
+          $project: {                                                            // Qaytariladigan maydonlarni belgilaydi
+            _id: 0,                                                             // _id ni olib tashaydi
+            memberId: 1,                                                        // memberId ni qaytaradi
+            likeRefId: 1,                                                       // likeRefId ni qaytaradi
+            myFavorite: '$$localMyFavorite',                                    // myFavorite = true
+          },
+        },
+      ],
+      as: 'meLiked',                                                            // Natija 'meLiked' nomi bilan qo'shiladi
+    },
+  };
+};
+
 
 export const lookupMember = {                                                  // MongoDB $lookup pipeline — member ma'lumotlarini biriktiradi
   $lookup: {                                                                   // SQL dagi JOIN ga o'xshash
