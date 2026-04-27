@@ -6,7 +6,7 @@ import { MemberService } from '../member/member.service';               // Membe
 import { Direction, Message } from '../../libs/enums/common.enum';
 import { T } from '../../libs/types/common';
 import { FollowInquiry } from '../../libs/dto/follow/follow.input';
-import { lookupFollowerData, lookupFollowingData } from '../../libs/config';
+import { lookupAuthMemberLiked, lookupFollowerData, lookupFollowingData } from '../../libs/config';
 
 @Injectable()                                                            // NestJS DI uchun belgi
 export class FollowService {
@@ -76,7 +76,7 @@ public async getMemberFollowings(memberId: ObjectId, input: FollowInquiry): Prom
           list: [
             { $skip: (page - 1) * limit },                                                        // Pagination: sahifani hisoblaydi
             { $limit: limit },                                                                     // Nechta qaytarishni cheklaydi
-            // meLiked — hozircha yozilmagan
+              lookupAuthMemberLiked(memberId, "$followingId"),
             // meFollowed — hozircha yozilmagan
             lookupFollowingData,                                                                   // Kuzatilayotgan member ma'lumotlarini JOIN qiladi
             { $unwind: '$followingData' },                                                         // followingData array → oddiy object
@@ -108,7 +108,7 @@ public async getMemberFollowings(memberId: ObjectId, input: FollowInquiry): Prom
           list: [
             { $skip: (page - 1) * limit },                                                       // Pagination: sahifani hisoblaydi
             { $limit: limit },                                                                    // Nechta qaytarishni cheklaydi
-            // meLiked — hozircha yozilmagan
+            lookupAuthMemberLiked(memberId, "$followers"),
             // meFollowed — hozircha yozilmagan
             lookupFollowerData,                                                                   // Kuzatuvchi member ma'lumotlarini JOIN qiladi
             { $unwind: '$followerData' },                                                         // followerData array → oddiy object

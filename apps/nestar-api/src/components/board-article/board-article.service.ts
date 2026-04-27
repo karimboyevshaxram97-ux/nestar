@@ -9,7 +9,7 @@ import { Direction, Message } from '../../libs/enums/common.enum';              
 import { BoardArticleStatus } from '../../libs/enums/board-article.enum';                        // ACTIVE, DELETE enumlari
 import { ViewGroup } from '../../libs/enums/view.enum';                                           // Ko'rish guruhi (BOARD_ARTICLE...)
 import { BoardArticleUpdate } from '../../libs/dto/board-article/board-article.update';          // Yangilash DTO si
-import { lookupMember, shapeIntoMongoObjectId } from '../../libs/config';                         // Yordamchi funksiyalar
+import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId } from '../../libs/config';                         // Yordamchi funksiyalar
 import { StatisticModifier, T } from '../../libs/types/common';                                   // Statistika turi va T (any object)
 import { LikeService } from '../like/like.service';
 import { LikeInput } from '../../libs/dto/like/like.input';
@@ -147,7 +147,7 @@ public async updateBoardArticle(memberId: ObjectId, input: BoardArticleUpdate): 
           list: [
             { $skip: (input.page - 1) * input.limit },                                           // Pagination: sahifani hisoblaydi
             { $limit: input.limit },                                                              // Nechta qaytarishni cheklaydi
-            // meLiked — hozircha yozilmagan (keyinroq qo'shiladi)
+           lookupAuthMemberLiked(memberId),
             lookupMember,                                                                         // Egasining ma'lumotlarini JOIN qiladi ($lookup)
             { $unwind: '$memberData' },                                                           // memberData array → oddiy object ga o'giradi
           ],
