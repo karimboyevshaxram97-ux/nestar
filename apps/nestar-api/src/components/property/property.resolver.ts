@@ -3,7 +3,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import * as mongoose from 'mongoose';
 import { PropertyService } from './property.service';
-import { AgentPropertiesInquiry, AllPropertiesInquiry, PropertiesInquiry, PropertyInput } from '../../libs/dto/property/property.input';
+import { AgentPropertiesInquiry, AllPropertiesInquiry, OrdinaryInquiry, PropertiesInquiry, PropertyInput } from '../../libs/dto/property/property.input';
 import { Properties, Property } from '../../libs/dto/property/property';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -70,6 +70,18 @@ public async getProperties(
   console.log('Query: getProperties');            // Debug log
   return await this.propertyService.getProperties(memberId, input); // Service ga uzatadi
 }
+
+//==============================================================
+@UseGuards(AuthGuard)                                                           // Faqat login bo'lgan user kira oladi
+@Query((returns) => Properties)                                                 // GraphQL Query, Properties ro'yxati qaytaradi
+public async getFavorites(
+  @Args('input') input: OrdinaryInquiry,                                        // Faqat page va limit (oddiy pagination)
+  @AuthMember('_id') memberId: mongoose.ObjectId,                                        // Tokendan foydalanuvchi ID si
+): Promise<Properties> {
+  console.log('Query: getProperties');                                          // ⚠️ Log noto'g'ri — 'getFavorites' bo'lishi kerak edi
+  return await this.propertyService.getFavorites(memberId, input);              // Service ga uzatadi
+}
+  
 
 //===============================================================
 @Roles(MemberType.AGENT)

@@ -29,6 +29,7 @@ export const shapeIntoMongoObjectId = (target: any) => {                       /
   return typeof target === 'string' ? new ObjectId(target) : target;          // String bo'lsa → ObjectId ga o'giradi, aks holda o'zini qaytaradi
 };
 
+//===============================================================
 export const lookupAuthMemberLiked = (memberId: T, targetRefId: string = '$_id') => { // Login user like bosganmi tekshiruvchi $lookup
   return {
     $lookup: {
@@ -63,6 +64,49 @@ export const lookupAuthMemberLiked = (memberId: T, targetRefId: string = '$_id')
   };
 };
 
+//=======================================================
+
+interface LookupAuthMemberFollowed {                                             // Input interface si
+  followerId: T;                                                                 // Kuzatuvchi member ID si
+  followingId: string;                                                           // Kuzatilayotgan member ID si (string)
+}
+
+export const lookupAuthMemberFollowed = (input: LookupAuthMemberFollowed) => { // Login user kuzatayaptimi tekshiruvchi $lookup
+  const { followerId, followingId } = input;                                    // Input dan ajratib oladi
+  return {
+    $lookup: {
+      from: 'follows',                                                           // 'follows' collectionidan qidiradi
+      let: {                                                                     // Lokal o'zgaruvchilar e'lon qilinadi
+        localFollowerId: followerId,                                             // Kuzatuvchi member ID si
+        localFollowingId: followingId,                                           // Kuzatilayotgan member ID si
+        localMyFavorite: true,                                                   // myFavorite qiymatini true deb belgilaydi
+      },
+      pipeline: [                                                                // follows collectionida qidirish shartlari
+        {
+          $match: {
+            $expr: {
+              $and: [                                                            // Ikki shart ham bajarilishi kerak
+                { $eq: ['$followerId', '$$localFollowerId'] },                  // followerId === localFollowerId
+                { $eq: ['$followingId', '$$localFollowingId'] },               // followingId === localFollowingId
+              ],
+            },
+          },
+        },
+        {
+          $project: {                                                            // Qaytariladigan maydonlarni belgilaydi
+            _id: 0,                                                             // _id ni olib tashaydi
+            followerId: 1,                                                      // followerId ni qaytaradi
+            followingId: 1,                                                     // followingId ni qaytaradi
+            myFollowing: '$$localMyFavorite',                                    // myFavorite = true
+          },
+        },
+      ],
+      as: 'meFollowed',                                                         // Natija 'meFollowed' nomi bilan qo'shiladi
+    },
+  };
+};
+
+//=======================================================
 
 export const lookupMember = {                                                  // MongoDB $lookup pipeline — member ma'lumotlarini biriktiradi
   $lookup: {                                                                   // SQL dagi JOIN ga o'xshash
@@ -89,5 +133,15 @@ export const lookupFollowerData = {                 // Kuzatuvchi member ma'lumo
     localField: 'followerId',                      // Joriy collectiondagi kalit maydon
     foreignField: '_id',                           // members collectionidagi mos maydon
     as: 'followerData',                            // Natija 'followerData' nomi bilan qo'shiladi (array)
+  },
+};
+
+
+export const lookupFavorite = {
+  $lookup: {
+    from: 'members',                                        // 'members' collectionidan qidiradi
+    localField: 'favoriteProperty.memberId',               // favoriteProperty ichidagi memberId
+    foreignField: '_id',                                   // members collectionidagi mos maydon
+    as: 'favoriteProperty.memberData',                     // Natija favoriteProperty.memberData ga qo'shiladi
   },
 };

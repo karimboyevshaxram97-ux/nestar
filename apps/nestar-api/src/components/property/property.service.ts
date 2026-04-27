@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId, Schema } from 'mongoose';
 import { Properties, Property } from '../../libs/dto/property/property';
 import { Direction, Message } from '../../libs/enums/common.enum';
-import { AgentPropertiesInquiry, AllPropertiesInquiry, PropertiesInquiry, PropertyInput } from '../../libs/dto/property/property.input';
+import { AgentPropertiesInquiry, AllPropertiesInquiry, OrdinaryInquiry, PropertiesInquiry, PropertyInput } from '../../libs/dto/property/property.input';
 import { MemberService } from '../member/member.service';
 import { PropertyStatus } from '../../libs/enums/property.enum';
 import { ViewGroup } from '../../libs/enums/view.enum';
@@ -18,6 +18,7 @@ import { LikeGroup } from '../../libs/enums/like.enum';
 
 @Injectable()
 export class PropertyService {
+  
   constructor(
     @InjectModel('Property') private readonly propertyModel: Model<Property>,
     // MongoDB Property modelini inject qiladi
@@ -198,6 +199,10 @@ public async getProperties(memberId: ObjectId, input: PropertiesInquiry): Promis
   if (options) {
     match['$or'] = options.map((ele) => ({ [ele]: true }));
   }
+}
+//=====================================================================
+public async getFavorites(memberId: ObjectId, input: OrdinaryInquiry): Promise<Properties> { // Property service dagi getFavorites metodi
+  return await this.likeService.getFavoriteProperties(memberId, input);                       // LikeService ga uzatadi (like logic u yerda)
 }
 //======================================================================
  

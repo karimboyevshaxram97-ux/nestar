@@ -238,3 +238,16 @@ export class AllPropertiesInquiry {
   @Field(() => ALPISearch)
   search: ALPISearch;
 }
+
+@InputType()                                                // GraphQL Input tipi
+export class OrdinaryInquiry {
+  @IsNotEmpty()                                             // Bo'sh bo'lmasligi shart
+  @Min(1)                                                   // Minimum qiymati 1
+  @Field(() => Int)                                         // GraphQL da Int tipi
+  page: number;                                             // Sahifa raqami (1 dan boshlanadi)
+
+  @IsNotEmpty()                                             // Bo'sh bo'lmasligi shart
+  @Min(1)                                                   // Minimum qiymati 1
+  @Field(() => Int)                                         // GraphQL da Int tipi
+  limit: number;                                            // Sahifadagi elementlar soni
+}
