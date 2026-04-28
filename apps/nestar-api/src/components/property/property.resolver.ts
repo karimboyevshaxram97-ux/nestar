@@ -81,7 +81,18 @@ public async getFavorites(
   console.log('Query: getProperties');                                          // ⚠️ Log noto'g'ri — 'getFavorites' bo'lishi kerak edi
   return await this.propertyService.getFavorites(memberId, input);              // Service ga uzatadi
 }
-  
+  //===========================================================
+@UseGuards(AuthGuard)                                             // AuthGuard qo‘llanmoqda, faqat autentifikatsiyadan o‘tgan foydalanuvchilar kiradi
+@Query((returns) => Properties)                                   // GraphQL query: Properties obyektini qaytaradi
+public async getVisited(
+  @Args('input') input: OrdinaryInquiry,                           // GraphQL argument: inquiry DTO
+  @AuthMember('_id') memberId: mongoose.ObjectId,                  // AuthMember dekoratori orqali foydalanuvchi ID olinadi
+): Promise<Properties> {
+  console.log('Query: getVisited'); // Konsolga log chiqaradi
+  return await this.propertyService.getVisited(memberId, input);   // PropertyService orqali tashrif buyurilgan propertylarni olish jarayonini bajaradi
+}
+
+
 
 //===============================================================
 @Roles(MemberType.AGENT)

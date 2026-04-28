@@ -145,3 +145,13 @@ export const lookupFavorite = {
     as: 'favoriteProperty.memberData',                     // Natija favoriteProperty.memberData ga qo'shiladi
   },
 };
+
+
+export const lookupVisit = { // lookupVisit konstantasi: MongoDB aggregation bosqichi sifatida ishlatiladi
+  $lookup: { // $lookup bosqichi: kolleksiyalarni join qilish uchun
+    from: 'members', // Qaysi kolleksiyadan ma’lumot olish kerak: members
+    localField: 'visitedProperty.memberId', // Mahalliy maydon: visitedProperty.memberId
+    foreignField: '_id', // Ulanadigan maydon: members kolleksiyasidagi _id
+    as: 'visitedProperty.memberData', // Natija saqlanadigan maydon: visitedProperty.memberData
+  },
+};

@@ -204,6 +204,13 @@ public async getProperties(memberId: ObjectId, input: PropertiesInquiry): Promis
 public async getFavorites(memberId: ObjectId, input: OrdinaryInquiry): Promise<Properties> { // Property service dagi getFavorites metodi
   return await this.likeService.getFavoriteProperties(memberId, input);                       // LikeService ga uzatadi (like logic u yerda)
 }
+//=====================================================================
+
+public async getVisited(memberId: ObjectId, input: OrdinaryInquiry): Promise<Properties> { // Asinxron funksiya: foydalanuvchi tashrif buyurgan propertylarni olish
+  return await this.viewService.getVisitedProperties(memberId, input); // likeService orqali favorite propertylarni qaytaradi
+}
+
+
 //======================================================================
  
 public async getAgentProperties(memberId: ObjectId, input: AgentPropertiesInquiry): Promise<Properties> {
