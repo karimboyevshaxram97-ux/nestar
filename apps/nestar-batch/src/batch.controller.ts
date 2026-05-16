@@ -15,7 +15,7 @@ export class BatchController {
   }
 
   //=================================================
- @Cron('00 00 01 * * *', { name: BATCH_ROLLBACK })                               // Har minutning 0-sekundida ishga tushadi
+ @Cron('00 * * * * *', { name: BATCH_ROLLBACK })                               // Har minutning 0-sekundida ishga tushadi
 public async batchRollback() {
   try {
     this.logger['context'] = BATCH_ROLLBACK;                                  // Logger contextini BATCH_ROLLBACK ga o'zgartiradi
@@ -28,7 +28,7 @@ public async batchRollback() {
 
 
 //=====================================================
-@Cron('20 00 01 * * *', { name: BATCH_TOP_PROPERTIES })                        // Har minutning 20-sekundida ishga tushadi
+@Cron('20 * * * * *', { name: BATCH_TOP_PROPERTIES })                        // Har minutning 20-sekundida ishga tushadi
 public async batchTopProperties() {
   try {
     this.logger['context'] = BATCH_TOP_PROPERTIES;                            // Logger contextini BATCH_TOP_PROPERTIES ga o'zgartiradi
@@ -39,7 +39,7 @@ public async batchTopProperties() {
   }
 }
 //====================================================
-@Cron('40 00 01 * * *', { name: BATCH_TOP_AGENTS })                            // Har minutning 40-sekundida ishga tushadi
+@Cron('40 * * * * *', { name: BATCH_TOP_AGENTS })                            // Har minutning 40-sekundida ishga tushadi
 public async batchTopAgents() {
   try {
     this.logger['context'] = BATCH_TOP_AGENTS;                                // Logger contextini BATCH_TOP_AGENTS ga o'zgartiradi
