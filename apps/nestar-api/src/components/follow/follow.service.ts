@@ -51,7 +51,7 @@ public async unsubscribe(followerId: ObjectId, followingId: ObjectId): Promise<F
   const result = await this.followModel.findOneAndDelete({                                 // Follow hujjatini DBdan o'chiradi
     followingId: followingId,                                                              // Kuzatilayotgan member ID si
     followerId: followerId,                                                                // Kuzatuvchi member ID si
-  });
+  }).exec();
   if (!result) throw new InternalServerErrorException(Message.NO_DATA_FOUND);             // Topilmasa 500 xatosi
 
   await this.memberService.memberStatsEditor({ _id: followerId, targetKey: 'memberFollowings', modifier: -1 });  // Kuzatuvchining followings soni -1

@@ -76,7 +76,7 @@ export class CommentService {
     {
       new: true, // Yangilangan hujjatni qaytaradi
     },
-  );
+  ).exec();
   if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED); // Agar natija bo‘lmasa, xato tashlaydi
   return result; // Yangilangan commentni qaytaradi
 }
@@ -103,7 +103,7 @@ export class CommentService {
         metaCounter: [{ $count: 'total' }],                                       // Umumiy sonini hisoblaydi
       },
     },
-  ]);
+  ]).exec();
   if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND); // Agar natija bo‘lmasa, xato tashlaydi
 
   return result[0];                                                                  // Natijaning birinchi elementini qaytaradi (list va metaCounter)
@@ -113,7 +113,7 @@ export class CommentService {
  
   /**ADMIN */
  public async removeCommentByAdmin(input: ObjectId): Promise<Comment> { // Asinxron funksiya: admin commentni o‘chiradi
-  const result = await this.commentModel.findByIdAndDelete(input); // MongoDB model orqali commentni ID bo‘yicha o‘chiradi
+  const result = await this.commentModel.findByIdAndDelete(input).exec(); // MongoDB model orqali commentni ID bo‘yicha o‘chiradi
   if (!result) throw new InternalServerErrorException(Message.REMOVE_FAILED); // Agar natija bo‘lmasa, xato tashlaydi
   return result; // O‘chirilgan commentni qaytaradi
 }
